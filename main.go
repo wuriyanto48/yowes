@@ -12,25 +12,36 @@ import (
 	"time"
 )
 
+const (
+	// Version of yowes
+	Version = "0.0.0"
+)
+
 func main() {
 	var (
-		outputName string
-		fileName   string
+		showVersion bool
 	)
 
-	flag.StringVar(&outputName, "output", "output", "output name")
-	flag.StringVar(&outputName, "o", "output", "output name")
+	flag.BoolVar(&showVersion, "version", false, "show version")
+	flag.BoolVar(&showVersion, "v", false, "show version")
 
 	flag.Usage = func() {
 		fmt.Println()
 		fmt.Println("Usage: ")
 		fmt.Println("yowes [url]")
-		fmt.Println("yowes -o my-file [url]")
+		fmt.Println()
+		fmt.Println("-h | -help (show help)")
+		fmt.Println("-v | -version (show version)")
 		fmt.Println("---------------------------")
 		fmt.Println()
 	}
 
 	flag.Parse()
+
+	if showVersion {
+		fmt.Printf("yowes version %s\n", Version)
+		os.Exit(0)
+	}
 
 	args := flag.Args()
 
@@ -55,12 +66,7 @@ func main() {
 
 	defer response.Body.Close()
 
-	ext := getExtension(url)
-	if len(ext) > 0 {
-		fileName = fmt.Sprintf("%s.%s", outputName, ext)
-	} else {
-		fileName = outputName
-	}
+	fileName := getFileName(url)
 
 	// create output file
 	file, err := os.Create(fileName)
@@ -104,16 +110,11 @@ func read(in io.Reader, out io.Writer) error {
 	return nil
 }
 
-func getExtension(urlParam string) string {
+func getFileName(urlParam string) string {
 	urls := strings.Split(urlParam, "/")
-	lastURLIdx := urls[len(urls)-1]
+	fileName := urls[len(urls)-1]
 
-	exts := strings.Split(lastURLIdx, ".")
-	if len(exts) < 2 {
-		return ""
-	}
-
-	return exts[1]
+	return fileName
 }
 
 func isValidURL(urlParam string) bool {
