@@ -57,14 +57,27 @@ func main() {
 		os.Exit(1)
 	}
 
+	// measure execution
+	done := make(chan bool)
+	// tick every 500 millisecond
+	ticker := time.NewTicker(time.Millisecond * 500)
+	fmt.Print("please wait ")
+	go measureExecution(done, ticker)
+
 	// get response from given url
-	response, err := get(url)
+	response, err := get(url, done)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	defer response.Body.Close()
+
+	// check status code
+	if response.StatusCode != 200 {
+		fmt.Printf("request fail, status = %d", response.StatusCode)
+		os.Exit(1)
+	}
 
 	fileName := getFileName(url)
 
@@ -81,7 +94,19 @@ func main() {
 
 }
 
-func get(url string) (*http.Response, error) {
+func measureExecution(done chan bool, ticker *time.Ticker) {
+	for {
+		select {
+		case <-ticker.C:
+			fmt.Print(".")
+		case <-done:
+			fmt.Println()
+			return
+		}
+	}
+}
+
+func get(url string, done chan bool) (*http.Response, error) {
 	httpClient := &http.Client{Timeout: time.Second * 10}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -92,6 +117,8 @@ func get(url string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	done <- true
 
 	return response, nil
 }
