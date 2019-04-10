@@ -1,3 +1,3 @@
 ## Yowes
 
-File downloader written in Go
+An experimental unix's like wget written in Go
