@@ -1,5 +1,6 @@
 yowes
 build.sh
+*.gz
 
 out*
 *.jpg
