@@ -1,10 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
@@ -61,13 +62,14 @@ func main() {
 	done := make(chan bool)
 	// tick every 500 millisecond
 	ticker := time.NewTicker(time.Millisecond * 500)
-	fmt.Print("please wait ")
+	fmt.Print("please wait. ")
 	go measureExecution(done, ticker)
 
 	// get response from given url
-	response, err := get(url, done)
+	response, err := get(url)
 	if err != nil {
-		fmt.Println(err)
+		done <- true
+		fmt.Println("cannot perform a request")
 		os.Exit(1)
 	}
 
@@ -75,6 +77,7 @@ func main() {
 
 	// check status code
 	if response.StatusCode != 200 {
+		done <- true
 		fmt.Printf("request fail, status = %d", response.StatusCode)
 		os.Exit(1)
 	}
@@ -84,13 +87,19 @@ func main() {
 	// create output file
 	file, err := os.Create(fileName)
 	if err != nil {
+		done <- true
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	defer file.Close()
 
-	read(response.Body, file)
+	err = readWrite(response.Body, file, done)
+	if err != nil {
+		done <- true
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 }
 
@@ -106,8 +115,19 @@ func measureExecution(done chan bool, ticker *time.Ticker) {
 	}
 }
 
-func get(url string, done chan bool) (*http.Response, error) {
-	httpClient := &http.Client{Timeout: time.Second * 10}
+func get(url string) (*http.Response, error) {
+	transport := &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout: 5 * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout: 5 * time.Second,
+		IdleConnTimeout:     10 * time.Second,
+	}
+
+	httpClient := &http.Client{
+		//Timeout:   time.Second * 10,
+		Transport: transport,
+	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -118,23 +138,34 @@ func get(url string, done chan bool) (*http.Response, error) {
 		return nil, err
 	}
 
-	done <- true
-
 	return response, nil
 }
 
-func read(in io.Reader, out io.Writer) error {
-	body, err := ioutil.ReadAll(in)
-	if err != nil {
-		return err
+func readWrite(in io.Reader, out io.Writer, done chan bool) error {
+	buffer := make([]byte, 1024)
+	reader := bufio.NewReader(in)
+
+	for {
+		line, err := reader.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				return err
+			}
+		}
+
+		// write
+		_, err = out.Write(buffer[:line])
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = out.Write(body)
-	if err != nil {
-		return err
-	}
+	done <- true
 
 	return nil
+
 }
 
 func getFileName(urlParam string) string {
