@@ -8,8 +8,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -59,10 +61,19 @@ func main() {
 	}
 
 	// measure execution
-	done := make(chan bool)
+	done := make(chan bool, 1)
+	kill := make(chan os.Signal, 1)
+
 	// tick every 500 millisecond
 	ticker := time.NewTicker(time.Millisecond * 500)
-	fmt.Print("please wait. ")
+	fmt.Print("please wait, ")
+
+	// notify when user interrupt the process
+	signal.Notify(kill, syscall.SIGINT, syscall.SIGTERM)
+
+	go waitOSNotify(kill, done)
+
+	// show execution process
 	go measureExecution(done, ticker)
 
 	// get response from given url
@@ -103,6 +114,17 @@ func main() {
 
 }
 
+func waitOSNotify(kill chan os.Signal, done chan bool) {
+	for {
+		select {
+		case <-kill:
+			fmt.Println("download interrupted")
+			done <- true
+			return
+		}
+	}
+}
+
 func measureExecution(done chan bool, ticker *time.Ticker) {
 	for {
 		select {
@@ -110,6 +132,7 @@ func measureExecution(done chan bool, ticker *time.Ticker) {
 			fmt.Print(".")
 		case <-done:
 			fmt.Println()
+			os.Exit(0)
 			return
 		}
 	}
