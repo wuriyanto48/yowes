@@ -1,6 +1,6 @@
 ## Yowes
 
-An experimental unix's like wget written in Go
+An experimental File downloader written in Go (unix's like wget written in Go)
 
 ### Install
 
@@ -20,7 +20,13 @@ An experimental unix's like wget written in Go
     $ yowes -v
     ```
 
+- <b>Windows</b>
+
+    Download latest version here https://github.com/wuriyanto48/yowes/releases
+
 ### Usage
+
+Download `Readme` file from `URL`
 ```shell
 $ yowes https://raw.githubusercontent.com/wuriyanto48/yowes/master/README.md
 ```
