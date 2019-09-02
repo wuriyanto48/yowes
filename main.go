@@ -18,6 +18,22 @@ import (
 const (
 	// Version of yowes
 	Version = "1.0.0"
+
+	// Banner of yowes
+	Banner = `                                          
+		
+	▓██   ██▓ ▒█████   █     █░▓█████   ██████ 
+	▒██  ██▒▒██▒  ██▒▓█░ █ ░█░▓█   ▀ ▒██    ▒ 
+	▒██ ██░▒██░  ██▒▒█░ █ ░█ ▒███   ░ ▓██▄   
+	░ ▐██▓░▒██   ██░░█░ █ ░█ ▒▓█  ▄   ▒   ██▒
+	░ ██▒▓░░ ████▓▒░░░██▒██▓ ░▒████▒▒██████▒▒
+	██▒▒▒ ░ ▒░▒░▒░ ░ ▓░▒ ▒  ░░ ▒░ ░▒ ▒▓▒ ▒ ░
+	▓██ ░▒░   ░ ▒ ▒░   ▒ ░ ░   ░ ░  ░░ ░▒  ░ ░
+	▒ ▒ ░░  ░ ░ ░ ▒    ░   ░     ░   ░  ░  ░  
+	░ ░         ░ ░      ░       ░  ░      ░  
+	░ ░                                       
+												
+   `
 )
 
 func main() {
@@ -30,6 +46,7 @@ func main() {
 
 	flag.Usage = func() {
 		fmt.Println()
+		fmt.Println(Banner)
 		fmt.Println("Usage: ")
 		fmt.Println("yowes [url]")
 		fmt.Println()
@@ -42,7 +59,9 @@ func main() {
 	flag.Parse()
 
 	if showVersion {
-		fmt.Printf("yowes version %s\n", Version)
+		fmt.Println(Banner)
+		fmt.Printf("  yowes version %s\n", Version)
+		fmt.Println()
 		os.Exit(0)
 	}
 
@@ -77,7 +96,7 @@ func main() {
 	go measureExecution(done, ticker)
 
 	// get response from given url
-	response, err := get(url)
+	response, err := httpGet(url)
 	if err != nil {
 		done <- true
 		fmt.Println("cannot perform a request")
@@ -138,7 +157,7 @@ func measureExecution(done chan bool, ticker *time.Ticker) {
 	}
 }
 
-func get(url string) (*http.Response, error) {
+func httpGet(url string) (*http.Response, error) {
 	transport := &http.Transport{
 		Dial: (&net.Dialer{
 			Timeout: 5 * time.Second,
