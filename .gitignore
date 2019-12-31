@@ -5,3 +5,5 @@ build.sh
 out*
 *.jpg
 *.png
+
+node_modules/
