@@ -1,0 +1,19 @@
+{
+  "name": "@wuriyanto/yowes",
+  "version": "1.0.0",
+  "description": "file downloader written in Go",
+  "main": "binary.js",
+  "bin": {
+    "yowes": "./run"
+  },
+  "scripts": {
+    "postinstall": "node -e 'require(\"./binary.js\").install()'",
+    "preinstall": "node -e 'require(\"./binary.js\").uninstall()'"
+  },
+  "author": "wuriyanto48@yahoo.co.id",
+  "license": "MIT",
+  "dependencies": {
+    "binary-install": "0.0.1"
+  },
+  "homepage": "https://github.com/wuriyanto48/yowes#readme"
+}
