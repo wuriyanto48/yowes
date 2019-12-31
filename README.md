@@ -4,7 +4,7 @@ An experimental File downloader written in Go (unix's like wget written in Go)
 
 ### Install
 
-<b>Using NPM</b>
+<b>Using NPM (TODO)</b>
 ```shell
 $ npm install -g @wuriyanto/yowes
 ```
